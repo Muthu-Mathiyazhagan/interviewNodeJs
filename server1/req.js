@@ -1,13 +1,15 @@
-let goodReq = {
-    "name": "Mutu",
-    "age": 11,
-    "mobile": "3245678",
-    "msg": "Is the info Correct [Yes/No]"
-}
+module.exports = [
+  {
+    name: 'Number ?',
+    age: 22,
+    mobile: '9876543210',
+    msg: 'Is the info Correct [Yes/No]'
+  },
 
-let badReq = {
-    "name": "Mutu",
-    "age": "11",
-    "mobile": "3245678",
-    "msg": "Is the info Correct [Yes/No]"
-}
+  {
+    name: 'Muthu',
+    age: "11",
+    mobile: '9876543210',
+    msg: 'Is the info Correct [Yes/No]'
+  }
+]
