@@ -10,19 +10,32 @@ const { Temp, Response } = require('./models')
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
+mongoose
+  .connect('mongodb://localhost/server1', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log('Connected')
+  })
+  .catch(err => {
+    console.error(err)
+  })
+
+const PORT = 3000
+
+app.listen(PORT, () => {
+  console.log(`Connected to Server ${PORT}`)
+})
+
+
+
 for (let index = 0; index < request.length; index++) {
   console.log(`request ${index} : ${request[index]}`)
   askToServer2(request[index])
 }
 
 async function askToServer2 (body) {
-  // const body = {
-  //   name: 'muthu',
-  //   age: 22,
-  //   mobile: '2345678',
-  //   msg: 'chicken dinner'
-  // }
-
   const response = await fetch('http://localhost:3010/ask', {
     method: 'post',
     body: JSON.stringify(body),
@@ -41,8 +54,6 @@ async function askToServer2 (body) {
     reqStatus: data.reqStatus
   }).save()
 }
-
-const PORT = 3000
 
 app.use(bodyParser.json())
 
@@ -81,23 +92,13 @@ router.post('/validate', async (req, res) => {
     }
   })
 
-  if (req.body.response_s !== 'na') return res.send('Bad request').status(405)
+  let status = 'OK'
 
-  return res.send('OK').status(200)
-})
+  if (req.body.response_s !== 'na') {
+    status = 'Bad Request'
 
-mongoose
-  .connect('mongodb://localhost/server1', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => {
-    console.log('Connected')
-  })
-  .catch(err => {
-    console.error(err)
-  })
+    return res.status(405).send(status)
+  }
 
-app.listen(PORT, () => {
-  console.log(`Connected to Server ${PORT}`)
+  return res.status(200).send(status)
 })

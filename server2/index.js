@@ -3,6 +3,7 @@ const app = express()
 const router = express.Router()
 let response
 const bodyParser = require('body-parser')
+const { json } = require('body-parser')
 app.use(bodyParser.json())
 const randomStatus = ['Yes', 'No', 'na']
 const fetch = (...args) =>
@@ -36,7 +37,7 @@ router.post('/ask', async (req, res) => {
         Status: 'Success'
       }
     }
-    server2to1(requestID, response)
+    server2to1(requestID)
 
     return res.send(response).status(200)
   } else {
@@ -56,9 +57,7 @@ router.post('/ask', async (req, res) => {
       }
     }
 
-    console.log(`response : ${response}`)
-
-    server2to1(requestID, response) // Do we need to continue if the input is Wrong ?
+    server2to1(requestID) // Do we need to continue if the input is Wrong ?
     return res.send(response).status(404)
   }
 })
@@ -76,12 +75,8 @@ async function server2to1 (requestID) {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    const data = await finalResponse.json()
 
-    console.log(data)
-
-    // The Response mentioned here is Req to Server One
-
-    // call the Server 1 by Only One Response
+    const { status } = finalResponse
+    console.log(`status : ${status}`)
   }, 2000)
 }
