@@ -6,9 +6,9 @@ const bodyParser = require('body-parser')
 // import fetch from 'node-fetch';
 // const fetch = require('node-fetch')
 const request = require('./req')
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const fetch = (url, body) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(url, body))
+const { Temp, Response } = require('./models')
+const fetch = (...args) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
 for (let index = 0; index < request.length; index++) {
   console.log(`request ${index} : ${request[index]}`)
@@ -31,6 +31,15 @@ async function askToServer2 (body) {
   const data = await response.json()
 
   console.log(data)
+
+  await new Temp({
+    name: data.name,
+    age: data.age,
+    mobile: data.mobile,
+    msg: data.msg,
+    reqId: data.reqId,
+    reqStatus: data.reqStatus
+  }).save()
 }
 
 const PORT = 3000
@@ -40,31 +49,41 @@ app.use(bodyParser.json())
 app.use('/', router)
 
 router.post('/validate', async (req, res) => {
-  if (req.body.response_s !== 'na') {
-    await new Response({
-      name: req.body.name,
-      age: req.body.age,
-      mobile: req.body.mobile,
-      msg: req.body.msg,
-      reqId: req.body.reqId,
-      reqStatus: req.body.reqStatus,
-      response_s: req.body.response_s
-    }).save()
+  console.log('validate Called')
 
-    return res.send('Bad request').status(405)
-  } else {
-    await new Response({
-      name: req.body.name,
-      age: req.body.age,
-      mobile: req.body.mobile,
-      msg: req.body.msg,
-      reqId: req.body.reqId,
-      reqStatus: req.body.reqStatus,
-      response_s: req.body.response_s
-    }).save()
+  console.log(`Req Id : ${req.body.reqId}`)
+  console.log(`response_s : ${req.body.response_s}`)
+  let temp = await Temp.findOne({ reqId: req.body.reqId })
+  console.log(`Temp : ${temp}`)
 
-    return res.send('OK').status(200)
-  }
+  // return // Tempory return;
+
+  const saveRes = new Response({
+    name: temp.name,
+    age: temp.age,
+    mobile: temp.mobile,
+    msg: temp.msg,
+    reqId: temp.reqId,
+    reqStatus: temp.reqStatus,
+    response_s: req.body.response_s
+  })
+
+  saveRes.save(function (err, result) {
+    if (err) {
+      console.log(err)
+    } else {
+      console.log(result)
+      Temp.findByIdAndRemove(temp._id)
+        .then(e => {
+          console.log('Deleted')
+        })
+        .catch(console.error)
+    }
+  })
+
+  if (req.body.response_s !== 'na') return res.send('Bad request').status(405)
+
+  return res.send('OK').status(200)
 })
 
 mongoose
@@ -82,38 +101,3 @@ mongoose
 app.listen(PORT, () => {
   console.log(`Connected to Server ${PORT}`)
 })
-
-const Response = mongoose.model(
-  'Response',
-  new mongoose.Schema({
-    name: {
-      type: String,
-      required: true
-    },
-    age: {
-      type: String,
-      required: true
-    },
-    mobile: {
-      type: String,
-      required: true
-    },
-
-    msg: {
-      type: String,
-      required: true
-    },
-    reqId: {
-      type: String,
-      required: true
-    },
-    reqStatus: {
-      type: Object,
-      required: true
-    },
-    response_s: {
-      type: String,
-      required: true
-    }
-  })
-)

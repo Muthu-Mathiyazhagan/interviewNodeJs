@@ -5,6 +5,8 @@ let response
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 const randomStatus = ['Yes', 'No', 'na']
+const fetch = (...args) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
 app.use('/', router)
 
@@ -49,24 +51,34 @@ router.post('/ask', async (req, res) => {
       reqId: requestID,
       reqStatus: {
         Status: 'Failure',
-        code : '00',
-        msg : 'Age Field Must be String.!'
+        code: '00',
+        msg: 'Age Field Must be String.!'
       }
     }
 
     console.log(`response : ${response}`)
 
-    server2to1(requestID, response)
-    return res
-      .send(response)
-      .status(200)
+    server2to1(requestID, response) // Do we need to continue if the input is Wrong ?
+    return res.send(response).status(404)
   }
-});
+})
 
-async function server2to1 (requestID) {    
-  setTimeout(() => {
-    response.reqId = requestID
-    response.response_s = randomStatus[requestID % 3]
+async function server2to1 (requestID) {
+  console.log('Server221 Called')
+  setTimeout(async () => {
+    let body = {
+      reqId: requestID,
+      response_s: randomStatus[requestID % 3]
+    }
+
+    const finalResponse = await fetch('http://localhost:3000/validate', {
+      method: 'post',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    const data = await finalResponse.json()
+
+    console.log(data)
 
     // The Response mentioned here is Req to Server One
 
